@@ -1,12 +1,46 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import QrCode from "qrcode-reader";
 import upload from "../assets/upload.png";
 import axios from "axios";
 import toast from "react-hot-toast";
-const QrScanner = ({ onDecode }) => {
+import { Html5QrcodeScanner } from "html5-qrcode";
+const QrScanner = ({
+  onDecode,
+  verified,
+  setVerified,
+  authenticated,
+  setAuthenticated,
+}) => {
   const [qrData, setQrData] = useState(null);
   const [serialNumber, setSerialNumber] = useState("");
+
+  useEffect(() => {
+    const scanner = new Html5QrcodeScanner("reader", {
+      qrbox: {
+        width: 500,
+        height: 500,
+        color: "white",
+      },
+      fps: 20,
+    });
+
+    scanner.render(success, error);
+
+    function success(result) {
+      document.getElementById("result").innerHTML = `
+        <h2>Success!</h2>
+        <p>${result}</p>
+      `;
+
+      scanner.clear();
+      document.getElementById("reader").remove();
+    }
+
+    function error(err) {
+      // console.error(err);
+    }
+  }, []);
 
   function changeHandler(e) {
     setSerialNumber(e.target.value);
@@ -24,6 +58,10 @@ const QrScanner = ({ onDecode }) => {
         "http://localhost:3000/dashboard",
         data
       );
+      setVerified(true);
+      response.data === "true"
+        ? setAuthenticated(true)
+        : setAuthenticated(false);
     } catch (error) {
       console.log("Some error occured during verification");
       toast.error("Some error occured during verification");
@@ -63,7 +101,7 @@ const QrScanner = ({ onDecode }) => {
   return (
     <div className="px-6 py-4 ">
       <div className="flex flex-col gap-2 items-center">
-        <div
+        {/* <div
           {...getRootProps()}
           className="dropzone w-[120px] h-[120px] bg-white rounded-full flex justify-center items-center cursor-pointer"
         >
@@ -72,7 +110,9 @@ const QrScanner = ({ onDecode }) => {
         </div>
         <div className="text-2xl underline cursor-pointer text-white">
           Upload QR
-        </div>
+        </div> */}
+        <div id="reader"></div>
+        <div id="result"></div>
         <div>
           <input
             type="text"
